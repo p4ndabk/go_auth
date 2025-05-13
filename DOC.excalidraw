@@ -1,0 +1,51 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+  "elements": [
+    {
+      "id": "Frl2yWmGTukruf8qGQYx1",
+      "type": "text",
+      "x": 375.0338342119901,
+      "y": -122.91317938349226,
+      "width": 784.1795043945312,
+      "height": 575,
+      "angle": 0,
+      "strokeColor": "#ffffff",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "aN",
+      "roundness": null,
+      "seed": 990979940,
+      "version": 9,
+      "versionNonce": 1933002377,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1747172793079,
+      "link": null,
+      "locked": false,
+      "text": "your-app/\n├── cmd/                # Entrypoints (main.go e outros binários)\n│   └── your-app/\n│       └── main.go\n├── internal/           # Código interno (regra de negócio, use cases, etc.)\n│   ├── auth/           # Um módulo (por exemplo, autenticação)\n│   │   ├── handler.go\n│   │   ├── service.go\n│   │   └── repository.go\n│   ├── user/           # Outro domínio\n│   └── ...\n├── pkg/                # Pacotes reutilizáveis por outros serviços\n│   └── jwt/\n│       └── token.go\n├── api/                # Definições de API (Swagger/OpenAPI, protobuf, etc.)\n│   └── openapi.yaml\n├── configs/            # Arquivos de configuração (YAML, JSON, ENV)\n│   └── config.yaml\n├── migrations/         # Scripts SQL para versionamento do banco\n├── scripts/            # Scripts auxiliares (dev, build, etc.)\n├── test/               # Testes de integração\n├── go.mod\n└── README.md",
+      "fontSize": 20,
+      "fontFamily": 5,
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "your-app/\n├── cmd/                # Entrypoints (main.go e outros binários)\n│   └── your-app/\n│       └── main.go\n├── internal/           # Código interno (regra de negócio, use cases, etc.)\n│   ├── auth/           # Um módulo (por exemplo, autenticação)\n│   │   ├── handler.go\n│   │   ├── service.go\n│   │   └── repository.go\n│   ├── user/           # Outro domínio\n│   └── ...\n├── pkg/                # Pacotes reutilizáveis por outros serviços\n│   └── jwt/\n│       └── token.go\n├── api/                # Definições de API (Swagger/OpenAPI, protobuf, etc.)\n│   └── openapi.yaml\n├── configs/            # Arquivos de configuração (YAML, JSON, ENV)\n│   └── config.yaml\n├── migrations/         # Scripts SQL para versionamento do banco\n├── scripts/            # Scripts auxiliares (dev, build, etc.)\n├── test/               # Testes de integração\n├── go.mod\n└── README.md",
+      "autoResize": true,
+      "lineHeight": 1.25
+    }
+  ],
+  "appState": {
+    "gridSize": 20,
+    "gridStep": 5,
+    "gridModeEnabled": false,
+    "viewBackgroundColor": "#123"
+  },
+  "files": {}
+}
