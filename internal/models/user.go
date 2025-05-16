@@ -40,3 +40,15 @@ func EmailExists(db *sql.DB, email string) (bool, error) {
 	}
 	return exists, nil
 }
+
+func GetUserByEmail(db *sql.DB, email string) (*User, error) {
+	row := db.QueryRow("SELECT id, name, email, password FROM users WHERE email = ?", email)
+
+	var user User
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

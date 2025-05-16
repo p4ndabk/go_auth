@@ -13,6 +13,7 @@ func SetupRouter(env string, db *sql.DB) *gin.Engine {
 	router.GET("/health", handlers.HealthHandler(env))
 
 	router.POST("/register", gin.WrapF(handlers.RegisterUserHandler(db)))
+	router.POST("/login", handlers.LoginHandler(db))
 
 	return router
 }
