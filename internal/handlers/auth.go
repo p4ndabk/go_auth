@@ -31,12 +31,12 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 
 		user, err := models.GetUserByEmail(db, req.Email)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuário não encontrado"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorized"})
 			return
 		}
 
 		if user.Password != req.Password {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Senha incorreta"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorized"})
 			return
 		}
 

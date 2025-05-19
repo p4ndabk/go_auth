@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go_auth/internal/database"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -18,17 +19,7 @@ func setupTestDB() *sql.DB {
 		panic(err)
 	}
 
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT NOT NULL,
-			email TEXT NOT NULL UNIQUE,
-			password TEXT NOT NULL
-		);
-	`)
-	if err != nil {
-		panic(err)
-	}
+	database.RunMigrations(db)
 	return db
 }
 
@@ -58,7 +49,6 @@ func TestRegisterUserHandler_EmailExists(t *testing.T) {
 	db := setupTestDB()
 	handler := RegisterUserHandler(db)
 
-	// Primeiro, cria um usuário
 	user := models.User{
 		Name:     "David Richard",
 		Email:    "david@example.com",

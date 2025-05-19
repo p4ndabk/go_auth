@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	_ "github.com/mattn/go-sqlite3"
+	"go_auth/internal/database"
 )
 
 func setupTestDB(t *testing.T) *sql.DB {
@@ -22,12 +23,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("erro abrindo banco: %v", err)
 	}
 
-	_, err = db.Exec(`CREATE TABLE users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		email TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL
-	);`)
+	err = database.RunMigrations(db)
 	if err != nil {
 		t.Fatalf("erro criando tabela users: %v", err)
 	}

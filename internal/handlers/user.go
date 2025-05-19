@@ -16,23 +16,31 @@ func RegisterUserHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		if user.Name == "" || user.Email == "" || user.Password == "" {
-			http.Error(w, "Campos obrigatórios ausentes", http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "Campos obrigatórios ausentes",
+			})
 			return
 		}
 
 		exists, err := models.EmailExists(db, user.Email)
 		if err != nil {
-			http.Error(w, "Erro ao verificar email", http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "Erro ao verificar email",
+			})
 			return
 		}
 
 		if exists {
-			http.Error(w, "Email já cadastrado", http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "Email já cadastrado",
+			})
 			return
 		}
 
 		if err := models.CreateUser(db, &user); err != nil {
-			http.Error(w, "Erro ao criar usuário", http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"error": "Erro ao criar usuário",
+			})
 			return
 		}
 
