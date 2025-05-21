@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"go_auth/internal/user"
+	"go_auth/pkg/logs"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,11 +13,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
-	_ "github.com/mattn/go-sqlite3"
 	"go_auth/internal/database"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func setupTestDB(t *testing.T) *sql.DB {
+	logs.Init("test")
+	
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("erro abrindo banco: %v", err)
@@ -91,7 +95,7 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 	db := setupTestDB(t)
 
 	loginPayload := LoginRequest{
-		Email:    "nouser@example.com",
+		Email:    "nouse1r@example.com",
 		Password: "123456",
 	}
 

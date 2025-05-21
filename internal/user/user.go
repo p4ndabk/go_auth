@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"go_auth/pkg/logs"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,17 +27,20 @@ func CreateUser(db *sql.DB, user *User) error {
 
 	stmt, err := db.Prepare("INSERT INTO users (uuid, external_uuid, name, email, password, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
+		logs.Error("create user prepare statement", err)
 		return err
 	}
 	defer stmt.Close()
 
 	res, err := stmt.Exec(user.UUID, user.ExternalUUID, user.Name, user.Email, user.Password, user.Active, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
+		logs.Error("create user exec statement", err)
 		return err
 	}
 
 	lastID, err := res.LastInsertId()
 	if err != nil {
+		logs.Error("create user last insert id", err)
 		return err
 	}
 
@@ -48,6 +52,7 @@ func EmailExists(db *sql.DB, email string) (bool, error) {
 	var exists bool
 	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", email).Scan(&exists)
 	if err != nil {
+		logs.Error("check email exists", err)
 		return false, err
 	}
 	return exists, nil
@@ -59,6 +64,7 @@ func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 	var user User
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
 	if err != nil {
+		logs.Error("get user by email", err)
 		return nil, err
 	}
 

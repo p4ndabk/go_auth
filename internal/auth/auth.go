@@ -15,7 +15,6 @@ import (
 
 var jwtSecret = []byte(config.GetEnv("JWT_SECRET", "default"))
 
-
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
