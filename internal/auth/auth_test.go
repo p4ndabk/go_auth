@@ -20,7 +20,6 @@ import (
 
 func setupTestDB(t *testing.T) *sql.DB {
 	logs.Init("test")
-	
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatalf("erro abrindo banco: %v", err)
@@ -40,6 +39,13 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("erro criando usuário teste: %v", err)
 	}
 	return db
+}
+
+type LoginResponse struct {
+	Success bool `json:"success"`
+	Data    struct {
+		Token string `json:"token"`
+	} `json:"data"`
 }
 
 func TestLoginHandler(t *testing.T) {
@@ -62,11 +68,11 @@ func TestLoginHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	var resp map[string]string
+	var resp LoginResponse
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
-	assert.Contains(t, resp, "token")
-	assert.NotEmpty(t, resp["token"])
+	assert.True(t, resp.Success)
+	assert.NotEmpty(t, resp.Data.Token)
 }
 
 func TestLoginHandlerInvalidPassword(t *testing.T) {

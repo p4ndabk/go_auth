@@ -24,6 +24,12 @@ func TestHealthHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	expected := `{"env":"test","status":"ok"}`
+	expected := `{
+    "success": true,
+		"data": {
+			"env": "test",
+			"status": "ok"
+		}
+	}`
 	assert.JSONEq(t, expected, w.Body.String())
 }

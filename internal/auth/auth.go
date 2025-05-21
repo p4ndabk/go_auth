@@ -8,6 +8,7 @@ import (
 
 	"go_auth/config"
 	"go_auth/internal/user"
+	"go_auth/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -24,18 +25,20 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+			response.Success(c.Writer, http.StatusBadRequest, gin.H{
+				"error": "Dados inválidos",
+			})
 			return
 		}
 
 		user, err := user.GetUserByEmail(db, req.Email)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorized"})
+			response.Fail(c.Writer, http.StatusUnauthorized, "no authorized")
 			return
 		}
 
 		if user.Password != req.Password {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorized"})
+			response.Fail(c.Writer, http.StatusUnauthorized, "no authorized")
 			return
 		}
 
@@ -49,10 +52,10 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 
 		fmt.Println("Jwt key:", jwtSecret)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao gerar token"})
+			response.Fail(c.Writer, http.StatusInternalServerError, "Erro ao gerar token")
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"token": string(tokenString)})
+		response.Success(c.Writer, http.StatusOK, gin.H{"token": string(tokenString)})
 	}
 }
