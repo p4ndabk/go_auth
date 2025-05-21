@@ -1,11 +1,10 @@
-package handlers_test
+package auth
 
 import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"go_auth/internal/handlers"
-	"go_auth/internal/models"
+	"go_auth/internal/user"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,7 +27,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("erro criando tabela users: %v", err)
 	}
 
-	err = models.CreateUser(db, &models.User{
+	err = user.CreateUser(db, &user.User{
 		Name:     "Test User",
 		Email:    "test@example.com",
 		Password: "123456",
@@ -43,7 +42,7 @@ func TestLoginHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := setupTestDB(t)
 
-	loginPayload := handlers.LoginRequest{
+	loginPayload := LoginRequest{
 		Email:    "test@example.com",
 		Password: "123456",
 	}
@@ -54,7 +53,7 @@ func TestLoginHandler(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := gin.Default()
-	r.POST("/login", handlers.LoginHandler(db))
+	r.POST("/login", LoginHandler(db))
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -70,7 +69,7 @@ func TestLoginHandlerInvalidPassword(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := setupTestDB(t)
 
-	loginPayload := handlers.LoginRequest{
+	loginPayload := LoginRequest{
 		Email:    "test@example.com",
 		Password: "wrongpassword",
 	}
@@ -81,7 +80,7 @@ func TestLoginHandlerInvalidPassword(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := gin.Default()
-	r.POST("/login", handlers.LoginHandler(db))
+	r.POST("/login", LoginHandler(db))
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
@@ -91,7 +90,7 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := setupTestDB(t)
 
-	loginPayload := handlers.LoginRequest{
+	loginPayload := LoginRequest{
 		Email:    "nouser@example.com",
 		Password: "123456",
 	}
@@ -102,7 +101,7 @@ func TestLoginHandlerUserNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := gin.Default()
-	r.POST("/login", handlers.LoginHandler(db))
+	r.POST("/login", LoginHandler(db))
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)

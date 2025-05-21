@@ -13,7 +13,7 @@ func main() {
 	env := config.GetEnv("APP_ENV", "development")
 	port := config.GetEnv("PORT", "8080")
 
-	db := database.InitSQLite("data.db")
+	db := database.InitDB()
 
 	router := routes.SetupRouter(env, db)
 

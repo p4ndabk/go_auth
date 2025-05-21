@@ -2,7 +2,9 @@ package routes
 
 import (
 	"database/sql"
-	"go_auth/internal/handlers"
+	"go_auth/internal/auth"
+	"go_auth/internal/health"
+	"go_auth/internal/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,10 +12,10 @@ import (
 func SetupRouter(env string, db *sql.DB) *gin.Engine {
 	router := gin.Default()
 
-	router.GET("/health", handlers.HealthHandler(env))
+	router.GET("/health", health.HealthHandler(env))
 
-	router.POST("/register", gin.WrapF(handlers.RegisterUserHandler(db)))
-	router.POST("/login", handlers.LoginHandler(db))
+	router.POST("/register", gin.WrapF(user.RegisterUserHandler(db)))
+	router.POST("/login", auth.LoginHandler(db))
 
 	return router
 }

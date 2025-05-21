@@ -1,4 +1,4 @@
-package database
+package sqlite
 
 import (
 	"database/sql"
@@ -21,9 +21,6 @@ func InitSQLite(dbPath string) *sql.DB {
 			log.Fatalf("Erro ao conectar ao SQLite: %v", err)
 		}
 		
-		if err := RunMigrations(db); err != nil {
-			log.Fatalf("Erro ao executar migrações: %v", err)
-		}
 
 		if err = db.Ping(); err != nil {
 			log.Fatalf("Erro ao verificar conexão com SQLite: %v", err)

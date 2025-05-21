@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"database/sql"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"go_auth/config"
-	"go_auth/internal/models"
+	"go_auth/internal/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -29,7 +29,7 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		user, err := models.GetUserByEmail(db, req.Email)
+		user, err := user.GetUserByEmail(db, req.Email)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorized"})
 			return

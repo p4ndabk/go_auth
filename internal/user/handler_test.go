@@ -1,10 +1,9 @@
-package handlers
+package user
 
 import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"go_auth/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -27,7 +26,7 @@ func TestRegisterUserHandler(t *testing.T) {
 	db := setupTestDB()
 	handler := RegisterUserHandler(db)
 
-	user := models.User{
+	user := User{
 		Name:     "David Richard",
 		Email:    "david@example.com",
 		Password: "senha123",
@@ -49,7 +48,7 @@ func TestRegisterUserHandler_EmailExists(t *testing.T) {
 	db := setupTestDB()
 	handler := RegisterUserHandler(db)
 
-	user := models.User{
+	user := User{
 		Name:     "David Richard",
 		Email:    "david@example.com",
 		Password: "senha123",

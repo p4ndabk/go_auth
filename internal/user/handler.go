@@ -1,15 +1,14 @@
-package handlers
+package user
 
 import (
 	"database/sql"
 	"encoding/json"
-	"go_auth/internal/models"
 	"net/http"
 )
 
 func RegisterUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var user models.User
+		var user User
 		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 			http.Error(w, "JSON inválido", http.StatusBadRequest)
 			return
@@ -22,7 +21,7 @@ func RegisterUserHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		exists, err := models.EmailExists(db, user.Email)
+		exists, err := EmailExists(db, user.Email)
 		if err != nil {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"error": "Erro ao verificar email",
@@ -33,13 +32,15 @@ func RegisterUserHandler(db *sql.DB) http.HandlerFunc {
 		if exists {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"error": "Email já cadastrado",
+				"err": err,
 			})
 			return
 		}
 
-		if err := models.CreateUser(db, &user); err != nil {
+		if err := CreateUser(db, &user); err != nil {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"error": "Erro ao criar usuário",
+				"err": err,
 			})
 			return
 		}

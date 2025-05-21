@@ -1,4 +1,4 @@
-package models
+package user
 
 import (
 	"database/sql"
@@ -10,7 +10,7 @@ import (
 type User struct {
 	ID            int    `json:"id"`
 	UUID          string `json:"uuid"`
-	ExternalUUID  string `json:"external_uuid,omitempty"`
+	ExternalUUID  *string `json:"external_uuid,omitempty"`
 	Name          string `json:"name"`
 	Email         string `json:"email"`
 	Password      string `json:"password"`
