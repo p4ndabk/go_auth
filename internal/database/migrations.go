@@ -17,7 +17,20 @@ func RunMigrations(db *sql.DB) error {
 		active BOOLEAN DEFAULT 1,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);`
+	);
+
+	CREATE TABLE IF NOT EXISTS applications (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uuid TEXT NOT NULL UNIQUE,
+		slug TEXT NOT NULL UNIQUE,
+		name TEXT NOT NULL,
+		description TEXT,
+		active BOOLEAN DEFAULT 1,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+	
+	`
 
 	_, err := db.Exec(query)
 	if err != nil {

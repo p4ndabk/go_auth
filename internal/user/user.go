@@ -71,7 +71,7 @@ func GetUserByEmail(db *sql.DB, email string) (*User, error) {
 	return &user, nil
 }
 
-func GetUserByID(db *sql.DB, id string) (*User, error) {
+func GetUserByID(db *sql.DB, id int) (*User, error) {
 	row := db.QueryRow("SELECT id, uuid, external_uuid, name, email, active, created_at, updated_at FROM users WHERE id = ?", id)
 
 	var user User
