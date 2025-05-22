@@ -26,7 +26,7 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 		var req LoginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			response.Success(c.Writer, http.StatusBadRequest, gin.H{
-				"error": "Dados inválidos",
+				"error": "no authorized",
 			})
 			return
 		}
@@ -45,7 +45,7 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"user_id": user.ID,
 			"email":   user.Email,
-			"exp":     time.Now().Add(24 * time.Hour).Unix(), // expira em 1 dia
+			"exp":     time.Now().Add(24 * time.Hour).Unix(),
 		})
 
 		tokenString, err := token.SignedString(jwtSecret)

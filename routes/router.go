@@ -15,6 +15,8 @@ func SetupRouter(env string, db *sql.DB) *gin.Engine {
 	router.GET("/health", health.HealthHandler(env))
 
 	router.POST("/register", gin.WrapF(user.RegisterUserHandler(db)))
+	router.GET("/user/{id}", gin.WrapF(user.ShowUserHandler(db)))
+	
 	router.POST("/login", auth.LoginHandler(db))
 
 	return router

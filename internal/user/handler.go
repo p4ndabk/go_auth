@@ -31,7 +31,7 @@ func RegisterUserHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := CreateUser(db, &user); err != nil {
+		if err := store(db, &user); err != nil {
 			response.Fail(w, http.StatusInternalServerError, "Erro ao criar usuário")
 			return
 		}
@@ -39,5 +39,29 @@ func RegisterUserHandler(db *sql.DB) http.HandlerFunc {
 		w.WriteHeader(http.StatusCreated)
 		user.Password = ""
 		response.Success(w, http.StatusCreated, user)
+	}
+}
+
+func ShowUserHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			response.Fail(w, http.StatusBadRequest, "ID do usuário ausente")
+			return
+		}
+
+		user, err := show(db, id)
+		if err != nil {
+			response.Fail(w, http.StatusInternalServerError, "Erro ao buscar usuário")
+			return
+		}
+
+		if user == nil {
+			response.Fail(w, http.StatusNotFound, "Usuário não encontrado")
+			return
+		}
+
+		user.Password = ""
+		response.Success(w, http.StatusOK, user)
 	}
 }
