@@ -2,7 +2,6 @@ package auth
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var jwtSecret = []byte(config.GetEnv("JWT_SECRET", "default"))
@@ -37,7 +37,7 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		if user.Password != req.Password {
+		if !CheckPasswordHash(req.Password, user.Password) {
 			response.Fail(c.Writer, http.StatusUnauthorized, "no authorized")
 			return
 		}
@@ -50,7 +50,6 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 
 		tokenString, err := token.SignedString(jwtSecret)
 
-		fmt.Println("Jwt key:", jwtSecret)
 		if err != nil {
 			response.Fail(c.Writer, http.StatusInternalServerError, "Erro ao gerar token")
 			return
@@ -58,4 +57,9 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 
 		response.Success(c.Writer, http.StatusOK, gin.H{"token": string(tokenString)})
 	}
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

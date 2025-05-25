@@ -72,3 +72,25 @@ func ShowUserHandler(db *sql.DB) gin.HandlerFunc {
 		response.Success(c.Writer, http.StatusOK, user)
 	}
 }
+
+func CreateUserApplicationRoleHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var uar UserApplicationRole
+		if err := c.ShouldBindJSON(&uar); err != nil {
+			response.Fail(c.Writer, http.StatusBadRequest, "JSON inválido")
+			return
+		}
+
+		if uar.UserID == 0 || uar.ApplicationID == 0 || uar.RoleID == 0 {
+			response.Fail(c.Writer, http.StatusBadRequest, "Campos user_id, application_id e role_id são obrigatórios")
+			return
+		}
+
+		if err := CreateUserApplicationRole(db, &uar); err != nil {
+			response.Fail(c.Writer, http.StatusInternalServerError, "Erro ao criar relacionamento")
+			return
+		}
+
+		response.Success(c.Writer, http.StatusCreated, uar)
+	}
+}

@@ -20,7 +20,8 @@ func SetupRouter(env string, db *sql.DB) *gin.Engine {
 	//user
 	router.POST("/register", user.RegisterUserHandler(db))
 	router.GET("/user/:id", user.ShowUserHandler(db))
-	
+	router.POST("/user-application-role", user.CreateUserApplicationRoleHandler(db))
+
 	//login
 	router.POST("/login", auth.LoginHandler(db))
 

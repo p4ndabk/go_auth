@@ -6,22 +6,29 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID            int    `json:"id"`
-	UUID          string `json:"uuid"`
-	ExternalUUID  *string `json:"external_uuid,omitempty"`
-	Name          string `json:"name"`
-	Email         string `json:"email"`
-	Password      string `json:"password"`
-	Active        bool   `json:"active"`
-	CreatedAt     string `json:"created_at"`
-	UpdatedAt     string `json:"updated_at"`
+	ID           int     `json:"id"`
+	UUID         string  `json:"uuid"`
+	ExternalUUID *string `json:"external_uuid,omitempty"`
+	Name         string  `json:"name"`
+	Email        string  `json:"email"`
+	Password     string  `json:"password"`
+	Active       bool    `json:"active"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
 }
 
 func CreateUser(db *sql.DB, user *User) error {
 	user.UUID = uuid.New().String()
+	hashedPassword, err := GenerateHashPassword(user.Password)
+	if err != nil {
+		logs.Error("create user hash password", err)
+		return err
+	}
+	user.Password = string(hashedPassword)
 	user.CreatedAt = time.Now().Format(time.RFC3339)
 	user.UpdatedAt = time.Now().Format(time.RFC3339)
 
@@ -46,6 +53,10 @@ func CreateUser(db *sql.DB, user *User) error {
 
 	user.ID = int(lastID)
 	return nil
+}
+
+func GenerateHashPassword(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
 func EmailExists(db *sql.DB, email string) (bool, error) {
