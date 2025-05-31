@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	
 )
 
 var jwtSecret = []byte(config.GetEnv("JWT_SECRET", "default"))
@@ -41,11 +42,18 @@ func LoginHandler(db *sql.DB) gin.HandlerFunc {
 			response.Fail(c.Writer, http.StatusUnauthorized, "no authorized")
 			return
 		}
+		permissions, err := user.GetUserPermissions(db, user.ID)
+
+		if err != nil {
+			response.Fail(c.Writer, http.StatusInternalServerError, "Erro ao buscar permissões do usuário")
+			return
+		}
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"user_id": user.ID,
 			"email":   user.Email,
 			"exp":     time.Now().Add(24 * time.Hour).Unix(),
+			"permissions": permissions,
 		})
 
 		tokenString, err := token.SignedString(jwtSecret)

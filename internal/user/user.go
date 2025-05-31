@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"go_auth/internal/permission"
 	"go_auth/pkg/logs"
 	"time"
 
@@ -93,4 +94,32 @@ func GetUserByID(db *sql.DB, id int) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (*User) GetUserPermissions(db *sql.DB, userID int) (*[]permission.Permission, error) {
+	rows, err := db.Query(`
+		SELECT p.id, p.name, p.application_id, p.slug, p.active, p.created_at, p.updated_at
+			FROM user_application_role uar
+			JOIN roles r ON r.id = uar.role_id
+			JOIN role_permission rp ON rp.role_id = r.id
+			JOIN permissions p ON p.id = rp.permission_id
+			WHERE uar.user_id = ?`, userID)
+
+	if err != nil {
+		logs.Error("get user permissions", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var permissions []permission.Permission
+	for rows.Next() {
+		var permission permission.Permission
+		if err := rows.Scan(&permission.ID, &permission.Name, &permission.ApplicationID, &permission.Slug, &permission.Active, &permission.CreatedAt, &permission.UpdatedAt); err != nil {
+			logs.Error("scan user permission", err)
+			return nil, err
+		}
+		permissions = append(permissions, permission)
+	}
+
+	return &permissions, nil
 }
