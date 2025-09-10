@@ -247,7 +247,7 @@ func (s *Service) GetUserAccessByApplications(userID int) ([]UserApplicationAcce
 		rolesQuery := `SELECT DISTINCT r.slug FROM roles r
 					   INNER JOIN user_application_role uar ON r.id = uar.role_id
 					   WHERE uar.user_id = ? AND uar.application_id = ? AND r.active = 1`
-		
+
 		roleRows, err := s.db.Query(rolesQuery, userID, app.ID)
 		if err != nil {
 			return nil, err
@@ -269,7 +269,7 @@ func (s *Service) GetUserAccessByApplications(userID int) ([]UserApplicationAcce
 							 INNER JOIN role_permissions rp ON p.id = rp.permission_id
 							 INNER JOIN user_application_role uar ON rp.role_id = uar.role_id
 							 WHERE uar.user_id = ? AND uar.application_id = ? AND p.active = 1`
-		
+
 		permRows, err := s.db.Query(permissionsQuery, userID, app.ID)
 		if err != nil {
 			return nil, err
