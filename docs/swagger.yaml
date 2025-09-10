@@ -1,0 +1,879 @@
+basePath: /
+definitions:
+  db.Application:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      uuid:
+        type: string
+    type: object
+  db.Permission:
+    properties:
+      active:
+        type: boolean
+      application_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  db.Role:
+    properties:
+      active:
+        type: boolean
+      application_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      uuid:
+        type: string
+    type: object
+  db.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
+  db.UserApplicationRole:
+    properties:
+      application_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      profile_id:
+        type: integer
+      role_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  handlers.AssignRolePermissionRequest:
+    properties:
+      permission_id:
+        type: integer
+    required:
+    - permission_id
+    type: object
+  handlers.AssignUserApplicationRequest:
+    properties:
+      application_id:
+        type: integer
+    required:
+    - application_id
+    type: object
+  handlers.AssignUserApplicationRoleRequest:
+    properties:
+      application_id:
+        type: integer
+      profile_id:
+        type: integer
+      role_id:
+        type: integer
+    required:
+    - application_id
+    - role_id
+    type: object
+  handlers.CreateApplicationRequest:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - name
+    - slug
+    type: object
+  handlers.CreatePermissionRequest:
+    properties:
+      application_id:
+        type: integer
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - application_id
+    - name
+    - slug
+    type: object
+  handlers.CreateRoleRequest:
+    properties:
+      application_id:
+        type: integer
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - application_id
+    - name
+    - slug
+    type: object
+  handlers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handlers.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/handlers.UserInfo'
+    type: object
+  handlers.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  handlers.UserInfo:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      permissions:
+        items:
+          type: string
+        type: array
+      roles:
+        items:
+          type: string
+        type: array
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API de autenticação e autorização em Go com JWT, suportando múltiplas
+    aplicações
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Go Auth API
+  version: "1.0"
+paths:
+  /admin/application-roles/users/{userId}/applications/{applicationId}/roles:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all roles assigned to a user within a specific application
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: Application ID
+        in: path
+        name: applicationId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user roles in application
+          schema:
+            items:
+              $ref: '#/definitions/db.Role'
+            type: array
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get user roles in application
+      tags:
+      - Admin - User-Application-Role Relationships
+  /admin/applications:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all applications in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of applications
+          schema:
+            items:
+              $ref: '#/definitions/db.Application'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all applications
+      tags:
+      - Admin - Applications
+    post:
+      consumes:
+      - application/json
+      description: Create a new application in the system
+      parameters:
+      - description: Application data
+        in: body
+        name: application
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Application created successfully
+          schema:
+            $ref: '#/definitions/db.Application'
+        "400":
+          description: Bad request - validation error or slug already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new application
+      tags:
+      - Admin - Applications
+  /admin/applications/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific application by its ID
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Application details
+          schema:
+            $ref: '#/definitions/db.Application'
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Application not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get application by ID
+      tags:
+      - Admin - Applications
+  /admin/applications/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all users assigned to a specific application
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of application users
+          schema:
+            items:
+              $ref: '#/definitions/db.User'
+            type: array
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get application users
+      tags:
+      - Admin - User-Application Relationships
+  /admin/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Create a new permission associated with an application
+      parameters:
+      - description: Permission data
+        in: body
+        name: permission
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Permission created successfully
+          schema:
+            $ref: '#/definitions/db.Permission'
+        "400":
+          description: Bad request - validation error, application not found, or slug
+            already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new permission
+      tags:
+      - Admin - Permissions
+  /admin/roles:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all roles, optionally filtered by application_id
+      parameters:
+      - description: Filter by application ID
+        in: query
+        name: application_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of roles
+          schema:
+            items:
+              $ref: '#/definitions/db.Role'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all roles
+      tags:
+      - Admin - Roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role associated with an application
+      parameters:
+      - description: Role data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Role created successfully
+          schema:
+            $ref: '#/definitions/db.Role'
+        "400":
+          description: Bad request - validation error, application not found, or slug
+            already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new role
+      tags:
+      - Admin - Roles
+  /admin/roles/{id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Assign a permission to a specific role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Permission assignment data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignRolePermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permission assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - invalid ID or permission not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Assign permission to role
+      tags:
+      - Admin - Role-Permission Relationships
+  /admin/users/{id}/application-roles:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all application-role assignments for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user application role assignments
+          schema:
+            items:
+              $ref: '#/definitions/db.UserApplicationRole'
+            type: array
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get user application roles
+      tags:
+      - Admin - User-Application-Role Relationships
+    post:
+      consumes:
+      - application/json
+      description: Assign a specific role to a user within an application context
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User application role assignment data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignUserApplicationRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - invalid ID or role/application not found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict - user already has this role in this application
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Assign role to user in application
+      tags:
+      - Admin - User-Application-Role Relationships
+  /admin/users/{id}/application-roles/{applicationId}/{roleId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a specific role from a user within an application context
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Application ID
+        in: path
+        name: applicationId
+        required: true
+        type: integer
+      - description: Role ID
+        in: path
+        name: roleId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role removed successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Remove role from user in application
+      tags:
+      - Admin - User-Application-Role Relationships
+  /admin/users/{id}/applications:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all applications assigned to a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user applications
+          schema:
+            items:
+              $ref: '#/definitions/db.Application'
+            type: array
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get user applications
+      tags:
+      - Admin - User-Application Relationships
+    post:
+      consumes:
+      - application/json
+      description: Assign an application to a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Application assignment data
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AssignUserApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Application assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - invalid ID or application not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Assign application to user
+      tags:
+      - Admin - User-Application Relationships
+  /admin/users/{id}/applications/{applicationId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an application assignment from a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Application ID
+        in: path
+        name: applicationId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Application removed successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - invalid ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Remove application from user
+      tags:
+      - Admin - User-Application Relationships
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password, returns JWT token with
+        user info
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Bad request - validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized - invalid credentials
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User login
+      tags:
+      - Authentication
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Get current authenticated user information including roles and
+        permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current user information
+          schema:
+            $ref: '#/definitions/handlers.UserInfo'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get current user
+      tags:
+      - Authentication
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with username, email and password
+      parameters:
+      - description: User registration data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request - validation error or user already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - Authentication
+securityDefinitions:
+  Bearer:
+    description: Digite "Bearer " seguido do token JWT
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
