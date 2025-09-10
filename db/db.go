@@ -59,8 +59,21 @@ type UserApplicationRole struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+type RolePermission struct {
+	ID            int       `json:"id"`
+	RoleID        int       `json:"role_id"`
+	PermissionID  int       `json:"permission_id"`
+	ApplicationID int       `json:"application_id"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
 func New(database *sql.DB) *Service {
 	return &Service{db: database}
+}
+
+// Ping checks if the database connection is alive
+func (s *Service) Ping() error {
+	return s.db.Ping()
 }
 
 func InitSchema(db *sql.DB, dbType string) error {
@@ -166,10 +179,17 @@ func (s *Service) GetUserByID(userID int) (*User, error) {
 	return user, nil
 }
 
+// UserApplicationAccess represents user's access within a specific application
+type UserApplicationAccess struct {
+	Application Application `json:"application"`
+	Roles       []string    `json:"roles"`
+	Permissions []string    `json:"permissions"`
+}
+
 func (s *Service) GetUserRoles(userID int) ([]string, error) {
-	query := `SELECT r.slug FROM roles r
-			  INNER JOIN user_roles ur ON r.id = ur.role_id
-			  WHERE ur.user_id = ? AND r.active = 1`
+	query := `SELECT DISTINCT r.slug FROM roles r
+			  INNER JOIN user_application_role uar ON r.id = uar.role_id
+			  WHERE uar.user_id = ? AND r.active = 1`
 
 	rows, err := s.db.Query(query, userID)
 	if err != nil {
@@ -192,8 +212,8 @@ func (s *Service) GetUserRoles(userID int) ([]string, error) {
 func (s *Service) GetUserPermissions(userID int) ([]string, error) {
 	query := `SELECT DISTINCT p.slug FROM permissions p
 			  INNER JOIN role_permissions rp ON p.id = rp.permission_id
-			  INNER JOIN user_roles ur ON rp.role_id = ur.role_id
-			  WHERE ur.user_id = ? AND p.active = 1`
+			  INNER JOIN user_application_role uar ON rp.role_id = uar.role_id
+			  WHERE uar.user_id = ? AND p.active = 1`
 
 	rows, err := s.db.Query(query, userID)
 	if err != nil {
@@ -211,6 +231,69 @@ func (s *Service) GetUserPermissions(userID int) ([]string, error) {
 	}
 
 	return permissions, nil
+}
+
+// GetUserAccessByApplications returns user's roles and permissions organized by application
+func (s *Service) GetUserAccessByApplications(userID int) ([]UserApplicationAccess, error) {
+	// First get all applications the user has access to
+	applications, err := s.GetUserApplications(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var userAccess []UserApplicationAccess
+	for _, app := range applications {
+		// Get roles for this user in this application
+		rolesQuery := `SELECT DISTINCT r.slug FROM roles r
+					   INNER JOIN user_application_role uar ON r.id = uar.role_id
+					   WHERE uar.user_id = ? AND uar.application_id = ? AND r.active = 1`
+		
+		roleRows, err := s.db.Query(rolesQuery, userID, app.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		var roles []string
+		for roleRows.Next() {
+			var role string
+			if err := roleRows.Scan(&role); err != nil {
+				roleRows.Close()
+				return nil, err
+			}
+			roles = append(roles, role)
+		}
+		roleRows.Close()
+
+		// Get permissions for this user in this application
+		permissionsQuery := `SELECT DISTINCT p.slug FROM permissions p
+							 INNER JOIN role_permissions rp ON p.id = rp.permission_id
+							 INNER JOIN user_application_role uar ON rp.role_id = uar.role_id
+							 WHERE uar.user_id = ? AND uar.application_id = ? AND p.active = 1`
+		
+		permRows, err := s.db.Query(permissionsQuery, userID, app.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		var permissions []string
+		for permRows.Next() {
+			var permission string
+			if err := permRows.Scan(&permission); err != nil {
+				permRows.Close()
+				return nil, err
+			}
+			permissions = append(permissions, permission)
+		}
+		permRows.Close()
+
+		userAccess = append(userAccess, UserApplicationAccess{
+			Application: app,
+			Roles:       roles,
+			Permissions: permissions,
+		})
+	}
+
+	return userAccess, nil
 }
 
 func (s *Service) EmailExists(email string) (bool, error) {
@@ -523,10 +606,31 @@ func (s *Service) DeletePermission(id int) error {
 
 // Role-Permission relationship operations
 func (s *Service) AssignPermissionToRole(roleID, permissionID int) error {
+	// Get application_id from role
+	var roleAppID int
+	roleQuery := `SELECT application_id FROM roles WHERE id = ?`
+	err := s.db.QueryRow(roleQuery, roleID).Scan(&roleAppID)
+	if err != nil {
+		return fmt.Errorf("role not found: %v", err)
+	}
+
+	// Get application_id from permission
+	var permAppID int
+	permQuery := `SELECT application_id FROM permissions WHERE id = ?`
+	err = s.db.QueryRow(permQuery, permissionID).Scan(&permAppID)
+	if err != nil {
+		return fmt.Errorf("permission not found: %v", err)
+	}
+
+	// Validate that role and permission belong to the same application
+	if roleAppID != permAppID {
+		return fmt.Errorf("role and permission must belong to the same application")
+	}
+
 	// Check if association already exists
-	checkQuery := `SELECT COUNT(*) FROM role_permissions WHERE role_id = ? AND permission_id = ?`
+	checkQuery := `SELECT COUNT(*) FROM role_permissions WHERE role_id = ? AND permission_id = ? AND application_id = ?`
 	var count int
-	err := s.db.QueryRow(checkQuery, roleID, permissionID).Scan(&count)
+	err = s.db.QueryRow(checkQuery, roleID, permissionID, roleAppID).Scan(&count)
 	if err != nil {
 		return err
 	}
@@ -535,8 +639,8 @@ func (s *Service) AssignPermissionToRole(roleID, permissionID int) error {
 		return fmt.Errorf("permission already assigned to role")
 	}
 
-	query := `INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)`
-	_, err = s.db.Exec(query, roleID, permissionID)
+	query := `INSERT INTO role_permissions (role_id, permission_id, application_id, created_at) VALUES (?, ?, ?, ?)`
+	_, err = s.db.Exec(query, roleID, permissionID, roleAppID, time.Now())
 	return err
 }
 
@@ -562,6 +666,57 @@ func (s *Service) GetRolePermissions(roleID int) ([]Permission, error) {
 	for rows.Next() {
 		var perm Permission
 		if err := rows.Scan(&perm.ID, &perm.ApplicationID, &perm.Name, &perm.Slug, &perm.Description, &perm.Active); err != nil {
+			return nil, err
+		}
+		permissions = append(permissions, perm)
+	}
+
+	return permissions, nil
+}
+
+// Get RolePermission records with full details
+func (s *Service) GetRolePermissionDetails(roleID int) ([]RolePermission, error) {
+	query := `SELECT rp.id, rp.role_id, rp.permission_id, rp.application_id, rp.created_at
+			  FROM role_permissions rp
+			  WHERE rp.role_id = ? ORDER BY rp.created_at`
+
+	rows, err := s.db.Query(query, roleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var rolePermissions []RolePermission
+	for rows.Next() {
+		var rp RolePermission
+		err := rows.Scan(&rp.ID, &rp.RoleID, &rp.PermissionID, &rp.ApplicationID, &rp.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		rolePermissions = append(rolePermissions, rp)
+	}
+
+	return rolePermissions, nil
+}
+
+// Get permissions for a role within a specific application
+func (s *Service) GetRolePermissionsByApplication(roleID, applicationID int) ([]Permission, error) {
+	query := `SELECT p.id, p.application_id, p.name, p.slug, p.description, p.active 
+			  FROM permissions p
+			  INNER JOIN role_permissions rp ON p.id = rp.permission_id
+			  WHERE rp.role_id = ? AND rp.application_id = ? ORDER BY p.name`
+
+	rows, err := s.db.Query(query, roleID, applicationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var permissions []Permission
+	for rows.Next() {
+		var perm Permission
+		err := rows.Scan(&perm.ID, &perm.ApplicationID, &perm.Name, &perm.Slug, &perm.Description, &perm.Active)
+		if err != nil {
 			return nil, err
 		}
 		permissions = append(permissions, perm)

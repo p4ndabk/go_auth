@@ -207,7 +207,7 @@ definitions:
       uuid:
         type: string
     type: object
-host: localhost:8080
+host: localhost:9001
 info:
   contact:
     email: support@swagger.io
@@ -766,6 +766,27 @@ paths:
       summary: Remove application from user
       tags:
       - Admin - User-Application Relationships
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the API and database connection
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API is healthy
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: API is unhealthy
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - Health
   /login:
     post:
       consumes:

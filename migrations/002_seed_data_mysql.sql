@@ -27,12 +27,20 @@ INSERT IGNORE INTO permissions (application_id, name, slug, description, active)
 (2, 'Admin Access', 'admin_access', 'Acesso ao painel admin', true);
 
 -- Insert sample role-permission associations
-INSERT IGNORE INTO role_permissions (role_id, permission_id) VALUES
--- Admin role gets all permissions in main-app
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
--- User role gets basic read permissions
-(2, 1), (2, 4), (2, 6),
--- Moderator role gets read and write for users and roles
-(3, 1), (3, 2), (3, 4), (3, 5), (3, 6),
--- Admin Panel Admin gets admin access
-(4, 8);
+INSERT IGNORE INTO role_permissions (role_id, permission_id, application_id) VALUES
+-- Admin role gets all permissions in main-app (application_id = 1)
+(1, 1, 1), (1, 2, 1), (1, 3, 1), (1, 4, 1), (1, 5, 1), (1, 6, 1), (1, 7, 1),
+-- User role gets basic read permissions in main-app (application_id = 1)
+(2, 1, 1), (2, 4, 1), (2, 6, 1),
+-- Moderator role gets read and write for users and roles in main-app (application_id = 1)
+(3, 1, 1), (3, 2, 1), (3, 4, 1), (3, 5, 1), (3, 6, 1),
+-- Admin Panel Admin gets admin access in admin-app (application_id = 2)
+(4, 8, 2);
+
+-- Insert admin user (password: admin123)
+INSERT IGNORE INTO users (uuid, username, email, password, created_at) VALUES
+('5c1daaf4-b138-4ca1-bbdd-1be4f2871d5c', 'admin', 'admin@admin.com', '$2a$14$LZeQWeCWbfVddA.RzJ1swueyAvl5JBSyLGcNft1buHBJCBHcn8dCy', NOW());
+
+-- Assign admin user to administrator role in main application
+INSERT IGNORE INTO user_application_role (user_id, application_id, role_id, profile_id, created_at) VALUES
+(1, 1, 1, NULL, NOW());

@@ -38,7 +38,10 @@ CREATE TABLE `applications` (
 CREATE TABLE `role_permissions` (
   `id` integer PRIMARY KEY,
   `role_id` integer,
-  `permission_id` integer
+  `permission_id` integer,
+  `application_id` integer,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(role_id, permission_id, application_id)
 );
 
 CREATE TABLE `user_roles` (

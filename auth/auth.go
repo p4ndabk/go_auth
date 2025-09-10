@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"go_auth/db"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -17,18 +19,16 @@ type Service struct {
 }
 
 type Claims struct {
-	UserID      int      `json:"user_id"`
-	Email       string   `json:"email"`
-	Roles       []string `json:"roles"`
-	Permissions []string `json:"permissions"`
+	UserID       int                        `json:"user_id"`
+	Email        string                     `json:"email"`
+	Applications []db.UserApplicationAccess `json:"applications"`
 	jwt.RegisteredClaims
 }
 
 type UserClaims struct {
-	UserID      int
-	Email       string
-	Roles       []string
-	Permissions []string
+	UserID       int
+	Email        string
+	Applications []db.UserApplicationAccess
 }
 
 func New(jwtSecret string) *Service {
@@ -47,12 +47,11 @@ func (s *Service) CheckPassword(password, hash string) bool {
 	return err == nil
 }
 
-func (s *Service) GenerateToken(userID int, email string, roles, permissions []string) (string, error) {
+func (s *Service) GenerateToken(userID int, email string, applications []db.UserApplicationAccess) (string, error) {
 	claims := &Claims{
-		UserID:      userID,
-		Email:       email,
-		Roles:       roles,
-		Permissions: permissions,
+		UserID:       userID,
+		Email:        email,
+		Applications: applications,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -82,10 +81,9 @@ func (s *Service) ValidateToken(tokenString string) (*UserClaims, error) {
 	}
 
 	return &UserClaims{
-		UserID:      claims.UserID,
-		Email:       claims.Email,
-		Roles:       claims.Roles,
-		Permissions: claims.Permissions,
+		UserID:       claims.UserID,
+		Email:        claims.Email,
+		Applications: claims.Applications,
 	}, nil
 }
 

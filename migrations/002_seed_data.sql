@@ -20,14 +20,25 @@ INSERT INTO permissions (application_id, name, slug, description, active) VALUES
   (1, 'Moderate Content', 'moderate_content', 'Can moderate user content', 1);
 
 -- Associar permissions às roles
--- Admin role gets all permissions
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7);
+-- Admin role gets all permissions in main-app (application_id = 1)
+INSERT INTO role_permissions (role_id, permission_id, application_id, created_at) VALUES
+  (1, 1, 1, datetime('now')), (1, 2, 1, datetime('now')), (1, 3, 1, datetime('now')), 
+  (1, 4, 1, datetime('now')), (1, 5, 1, datetime('now')), (1, 6, 1, datetime('now')), 
+  (1, 7, 1, datetime('now'));
 
--- User role gets basic permissions
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-  (2, 1), (2, 4), (2, 5);
+-- User role gets basic permissions in main-app (application_id = 1)
+INSERT INTO role_permissions (role_id, permission_id, application_id, created_at) VALUES
+  (2, 1, 1, datetime('now')), (2, 4, 1, datetime('now')), (2, 5, 1, datetime('now'));
 
--- Moderator role gets moderation permissions
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-  (3, 1), (3, 4), (3, 5), (3, 7);
+-- Moderator role gets moderation permissions in main-app (application_id = 1)
+INSERT INTO role_permissions (role_id, permission_id, application_id, created_at) VALUES
+  (3, 1, 1, datetime('now')), (3, 4, 1, datetime('now')), (3, 5, 1, datetime('now')), 
+  (3, 7, 1, datetime('now'));
+
+-- Inserir usuário admin (senha: admin123)
+INSERT INTO users (uuid, username, email, password, created_at) VALUES
+  ('5c1daaf4-b138-4ca1-bbdd-1be4f2871d5c', 'admin', 'admin@admin.com', '$2a$14$LZeQWeCWbfVddA.RzJ1swueyAvl5JBSyLGcNft1buHBJCBHcn8dCy', datetime('now'));
+
+-- Associar usuário admin ao role de administrator na aplicação principal
+INSERT INTO user_application_role (user_id, application_id, role_id, profile_id, created_at) VALUES
+  (1, 1, 1, NULL, datetime('now'));

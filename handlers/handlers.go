@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"regexp"
+	"time"
 
 	"go_auth/auth"
 	"go_auth/db"
@@ -32,12 +33,11 @@ type LoginResponse struct {
 }
 
 type UserInfo struct {
-	ID          int      `json:"id"`
-	UUID        string   `json:"uuid"`
-	Username    string   `json:"username"`
-	Email       string   `json:"email"`
-	Roles       []string `json:"roles"`
-	Permissions []string `json:"permissions"`
+	ID           int                        `json:"id"`
+	UUID         string                     `json:"uuid"`
+	Username     string                     `json:"username"`
+	Email        string                     `json:"email"`
+	Applications []db.UserApplicationAccess `json:"applications"`
 }
 
 func New(dbService *db.Service, authService *auth.Service) *Handler {
@@ -151,21 +151,15 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	// Get user roles and permissions
-	roles, err := h.db.GetUserRoles(user.ID)
+	// Get user roles and permissions organized by application
+	userAccess, err := h.db.GetUserAccessByApplications(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user roles"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user access"})
 		return
 	}
 
-	permissions, err := h.db.GetUserPermissions(user.ID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user permissions"})
-		return
-	}
-
-	// Generate JWT token
-	token, err := h.auth.GenerateToken(user.ID, user.Email, roles, permissions)
+	// Generate JWT token with application structure
+	token, err := h.auth.GenerateToken(user.ID, user.Email, userAccess)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -174,12 +168,11 @@ func (h *Handler) Login(c *gin.Context) {
 	response := LoginResponse{
 		Token: token,
 		User: UserInfo{
-			ID:          user.ID,
-			UUID:        user.UUID,
-			Username:    user.Username,
-			Email:       user.Email,
-			Roles:       roles,
-			Permissions: permissions,
+			ID:           user.ID,
+			UUID:         user.UUID,
+			Username:     user.Username,
+			Email:        user.Email,
+			Applications: userAccess,
 		},
 	}
 
@@ -213,27 +206,48 @@ func (h *Handler) Me(c *gin.Context) {
 		return
 	}
 
-	// Get fresh roles and permissions
-	roles, err := h.db.GetUserRoles(user.ID)
+	// Get user access organized by applications
+	userAccess, err := h.db.GetUserAccessByApplications(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user roles"})
-		return
-	}
-
-	permissions, err := h.db.GetUserPermissions(user.ID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user permissions"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user access"})
 		return
 	}
 
 	userInfo := UserInfo{
-		ID:          user.ID,
-		UUID:        user.UUID,
-		Username:    user.Username,
-		Email:       user.Email,
-		Roles:       roles,
-		Permissions: permissions,
+		ID:           user.ID,
+		UUID:         user.UUID,
+		Username:     user.Username,
+		Email:        user.Email,
+		Applications: userAccess,
 	}
 
 	c.JSON(http.StatusOK, userInfo)
+}
+
+// Health returns the health status of the API
+// @Summary Health check
+// @Description Returns the health status of the API and database connection
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "API is healthy"
+// @Failure 500 {object} map[string]interface{} "API is unhealthy"
+// @Router /health [get]
+func (h *Handler) Health(c *gin.Context) {
+	// Check database connection
+	if err := h.db.Ping(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":    "unhealthy",
+			"message":   "Database connection failed",
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":    "healthy",
+		"message":   "API is running normally",
+		"timestamp": time.Now().Format(time.RFC3339),
+		"version":   "1.0.0",
+	})
 }
