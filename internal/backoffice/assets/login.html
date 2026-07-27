@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Entrar · Go Auth Backoffice</title>
+  <script>
+    document.documentElement.setAttribute(
+      'data-bs-theme', localStorage.getItem('go_auth_theme') || 'light');
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.45.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="/backoffice/css/app.css">
+</head>
+<body class="d-flex flex-column bg-surface-secondary">
+  <div class="page page-center">
+    <div class="container container-tight py-4">
+      <div class="text-center mb-4">
+        <h1 class="navbar-brand navbar-brand-autodark">
+          <i class="ti ti-lock-square-rounded me-2"></i>Go Auth
+        </h1>
+        <div class="text-secondary">Backoffice</div>
+      </div>
+      <div class="card card-md">
+        <div class="card-body">
+          <h2 class="h2 text-center mb-4">Entrar na sua conta</h2>
+          <div class="alert alert-danger d-none" id="login-error"></div>
+          <form id="login-form" novalidate>
+            <div class="mb-3">
+              <label class="form-label">E-mail</label>
+              <input type="email" name="email" class="form-control" placeholder="seu@email.com" autocomplete="username" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Senha</label>
+              <input type="password" name="password" class="form-control" placeholder="Senha" autocomplete="current-password" required>
+            </div>
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary w-100" id="login-submit">Entrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" defer></script>
+  <script src="/backoffice/js/api.js" defer></script>
+  <script src="/backoffice/js/ui.js" defer></script>
+  <script src="/backoffice/js/login.js" defer></script>
+</body>
+</html>

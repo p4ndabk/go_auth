@@ -288,6 +288,33 @@ func (h *Handler) ListForUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"application_roles": assignments})
 }
 
+// UserAccess returns the consolidated access of a user
+// @Summary Get consolidated user access
+// @Description Retrieve, for every application the user holds a role in, the role slugs and the permission slugs inherited from them — the same aggregation embedded in the JWT at login
+// @Tags Admin - User-Application-Role Relationships
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path int true "User ID"
+// @Success 200 {array} UserApplicationAccess
+// @Failure 400 {object} apierror.Body
+// @Router /api/admin/users/{id}/access [get]
+func (h *Handler) UserAccess(c *gin.Context) {
+	userID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		apierror.Respond(c, apierror.BadRequest("invalid_id", "invalid user ID"))
+		return
+	}
+
+	access, err := h.Service.GetUserAccess(uint(userID))
+	if err != nil {
+		apierror.Respond(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"access": access})
+}
+
 // ListApplicationsForUser lists the applications a user has access to
 // @Summary Get user applications
 // @Description Retrieve all applications assigned to a specific user

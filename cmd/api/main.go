@@ -32,6 +32,7 @@ import (
 	"go_auth/internal/access"
 	"go_auth/internal/application"
 	"go_auth/internal/auth"
+	"go_auth/internal/backoffice"
 	"go_auth/internal/config"
 	"go_auth/internal/database"
 	"go_auth/internal/docs"
@@ -90,6 +91,12 @@ func main() {
 	role.RegisterRoutes(admin, roleHandler)
 	permission.RegisterRoutes(admin, permissionHandler)
 	access.RegisterAdminRoutes(admin, accessHandler)
+
+	// The backoffice UI mounts on the engine root, not on /api — see
+	// AGENT_FRONT.md.
+	if err := backoffice.RegisterRoutes(router); err != nil {
+		log.Fatalf("failed to mount backoffice: %v", err)
+	}
 
 	log.Printf("server starting on port %s", cfg.Port)
 	log.Fatal(router.Run(":" + cfg.Port))

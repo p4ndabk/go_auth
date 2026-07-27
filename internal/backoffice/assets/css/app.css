@@ -1,0 +1,67 @@
+/* Small additions on top of Tabler — keep this file minimal, prefer
+   Tabler's utility classes over new rules. */
+
+/* Pin the user/theme/logout block to the bottom of the sidebar on desktop.
+   On mobile the sidebar is a collapse, so it just follows the nav list. */
+@media (min-width: 992px) {
+  .navbar-vertical .navbar-collapse {
+    display: flex !important;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+  }
+}
+
+/* Toasts are appended to <body> by ui.js. */
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 1090;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.table-actions {
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Permission checklist inside the role permissions modal. */
+.permission-list {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+/* Roles x permissions matrix on the application detail page. The first
+   column stays put while the role columns scroll sideways. */
+.matrix-table th,
+.matrix-table td {
+  vertical-align: middle;
+}
+
+.matrix-table .matrix-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 15rem;
+  background: var(--tblr-bg-surface);
+}
+
+.matrix-table thead .matrix-row-header {
+  z-index: 2;
+}
+
+.matrix-table tbody tr:hover .matrix-row-header {
+  background: var(--tblr-bg-surface-secondary);
+}
+
+.matrix-table .form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -100,4 +101,32 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"users": users})
+}
+
+// Get returns a single user by ID
+// @Summary Get user by ID
+// @Description Retrieve a specific user by their ID
+// @Tags Admin - Users
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path int true "User ID"
+// @Success 200 {object} User
+// @Failure 400 {object} apierror.Body
+// @Failure 404 {object} apierror.Body
+// @Router /api/admin/users/{id} [get]
+func (h *Handler) Get(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		apierror.Respond(c, apierror.BadRequest("invalid_id", "invalid user ID"))
+		return
+	}
+
+	u, err := h.Service.GetByID(uint(id))
+	if err != nil {
+		apierror.Respond(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": u})
 }

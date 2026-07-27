@@ -14,6 +14,8 @@ func RegisterProtectedRoutes(rg *gin.RouterGroup, h *Handler) {
 
 // RegisterAdminRoutes mounts the admin user-application-role endpoints.
 func RegisterAdminRoutes(rg *gin.RouterGroup, h *Handler) {
+	rg.GET("/users/:id/access", h.UserAccess)
+
 	rg.POST("/users/:id/application-roles", h.Assign)
 	rg.GET("/users/:id/application-roles", h.ListForUser)
 	rg.DELETE("/users/:id/application-roles/:applicationId/:roleId", h.Remove)

@@ -14,7 +14,11 @@ an interface — see Conventions).
 - SQLite via `github.com/glebarez/sqlite` (pure Go, no CGO required)
 - `github.com/joho/godotenv` — loads `.env` into environment variables
 
-Module path: `github.com/p4ndabk/base-project-go`
+Module path: `go_auth`
+
+The admin UI that ships with the API has its own conventions — stack, file
+layout, how to add a page — in **[AGENT_FRONT.md](./AGENT_FRONT.md)**. Read
+that one before touching anything under `internal/backoffice/`.
 
 ## Architecture
 

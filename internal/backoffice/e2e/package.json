@@ -1,0 +1,11 @@
+{
+  "name": "go-auth-backoffice-e2e",
+  "private": true,
+  "description": "Optional end-to-end check for the backoffice UI. Not part of `go test`.",
+  "scripts": {
+    "test": "node backoffice.spec.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}

@@ -13,6 +13,11 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+node_modules/
+
+# Backoffice e2e artifacts
+internal/backoffice/e2e/shots/
+internal/backoffice/e2e/package-lock.json
 
 # Go workspace file
 go.work
