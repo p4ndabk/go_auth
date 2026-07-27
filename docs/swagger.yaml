@@ -1,6 +1,18 @@
 basePath: /
 definitions:
-  db.Application:
+  go_auth_internal_apierror.Body:
+    properties:
+      error:
+        $ref: '#/definitions/go_auth_internal_apierror.Detail'
+    type: object
+  go_auth_internal_apierror.Detail:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  go_auth_internal_application.Application:
     properties:
       active:
         type: boolean
@@ -15,7 +27,7 @@ definitions:
       uuid:
         type: string
     type: object
-  db.Permission:
+  go_auth_internal_permission.Permission:
     properties:
       active:
         type: boolean
@@ -30,7 +42,7 @@ definitions:
       slug:
         type: string
     type: object
-  db.Role:
+  go_auth_internal_role.Role:
     properties:
       active:
         type: boolean
@@ -47,7 +59,7 @@ definitions:
       uuid:
         type: string
     type: object
-  db.User:
+  go_auth_internal_user.User:
     properties:
       created_at:
         type: string
@@ -60,7 +72,49 @@ definitions:
       uuid:
         type: string
     type: object
-  db.UserApplicationRole:
+  internal_access.AssignRequest:
+    properties:
+      application_id:
+        type: integer
+      profile_id:
+        type: integer
+      role_id:
+        type: integer
+    required:
+    - application_id
+    - role_id
+    type: object
+  internal_access.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_access.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/internal_access.UserInfo'
+    type: object
+  internal_access.UserApplicationAccess:
+    properties:
+      application:
+        $ref: '#/definitions/go_auth_internal_application.Application'
+      permissions:
+        items:
+          type: string
+        type: array
+      roles:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_access.UserApplicationRole:
     properties:
       application_id:
         type: integer
@@ -75,49 +129,130 @@ definitions:
       user_id:
         type: integer
     type: object
-  handlers.AssignRolePermissionRequest:
+  internal_access.UserInfo:
+    properties:
+      applications:
+        items:
+          $ref: '#/definitions/internal_access.UserApplicationAccess'
+        type: array
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+      uuid:
+        type: string
+    type: object
+  internal_application.Application:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      uuid:
+        type: string
+    type: object
+  internal_application.CreateRequest:
+    properties:
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - name
+    - slug
+    type: object
+  internal_application.UpdateRequest:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - name
+    - slug
+    type: object
+  internal_permission.CreateRequest:
+    properties:
+      application_id:
+        type: integer
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - application_id
+    - name
+    - slug
+    type: object
+  internal_permission.Permission:
+    properties:
+      active:
+        type: boolean
+      application_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+  internal_permission.UpdateRequest:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      slug:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - name
+    - slug
+    type: object
+  internal_role.AssignPermissionRequest:
     properties:
       permission_id:
         type: integer
     required:
     - permission_id
     type: object
-  handlers.AssignUserApplicationRequest:
-    properties:
-      application_id:
-        type: integer
-    required:
-    - application_id
-    type: object
-  handlers.AssignUserApplicationRoleRequest:
-    properties:
-      application_id:
-        type: integer
-      profile_id:
-        type: integer
-      role_id:
-        type: integer
-    required:
-    - application_id
-    - role_id
-    type: object
-  handlers.CreateApplicationRequest:
-    properties:
-      description:
-        type: string
-      name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      slug:
-        maxLength: 50
-        minLength: 2
-        type: string
-    required:
-    - name
-    - slug
-    type: object
-  handlers.CreatePermissionRequest:
+  internal_role.CreateRequest:
     properties:
       application_id:
         type: integer
@@ -136,10 +271,27 @@ definitions:
     - name
     - slug
     type: object
-  handlers.CreateRoleRequest:
+  internal_role.Role:
     properties:
+      active:
+        type: boolean
       application_id:
         type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      slug:
+        type: string
+      uuid:
+        type: string
+    type: object
+  internal_role.UpdateRequest:
+    properties:
+      active:
+        type: boolean
       description:
         type: string
       name:
@@ -151,28 +303,10 @@ definitions:
         minLength: 2
         type: string
     required:
-    - application_id
     - name
     - slug
     type: object
-  handlers.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  handlers.LoginResponse:
-    properties:
-      token:
-        type: string
-      user:
-        $ref: '#/definitions/handlers.UserInfo'
-    type: object
-  handlers.RegisterRequest:
+  internal_user.RegisterRequest:
     properties:
       email:
         type: string
@@ -188,26 +322,20 @@ definitions:
     - password
     - username
     type: object
-  handlers.UserInfo:
+  internal_user.User:
     properties:
+      created_at:
+        type: string
       email:
         type: string
       id:
         type: integer
-      permissions:
-        items:
-          type: string
-        type: array
-      roles:
-        items:
-          type: string
-        type: array
       username:
         type: string
       uuid:
         type: string
     type: object
-host: localhost:9001
+host: localhost:8080
 info:
   contact:
     email: support@swagger.io
@@ -222,7 +350,7 @@ info:
   title: Go Auth API
   version: "1.0"
 paths:
-  /admin/application-roles/users/{userId}/applications/{applicationId}/roles:
+  /api/admin/application-roles/users/{userId}/applications/{applicationId}/roles:
     get:
       consumes:
       - application/json
@@ -242,27 +370,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of user roles in application
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/db.Role'
+              $ref: '#/definitions/go_auth_internal_role.Role'
             type: array
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get user roles in application
       tags:
       - Admin - User-Application-Role Relationships
-  /admin/applications:
+  /api/admin/applications:
     get:
       consumes:
       - application/json
@@ -271,16 +393,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of applications
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/db.Application'
+              $ref: '#/definitions/internal_application.Application'
             type: array
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get all applications
@@ -296,30 +417,63 @@ paths:
         name: application
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreateApplicationRequest'
+          $ref: '#/definitions/internal_application.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Application created successfully
+          description: Created
           schema:
-            $ref: '#/definitions/db.Application'
+            $ref: '#/definitions/internal_application.Application'
         "400":
-          description: Bad request - validation error or slug already exists
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
         "500":
-          description: Internal server error
+          description: Internal Server Error
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Create a new application
       tags:
       - Admin - Applications
-  /admin/applications/{id}:
+  /api/admin/applications/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an application by ID
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Delete an application
+      tags:
+      - Admin - Applications
     get:
       consumes:
       - application/json
@@ -334,30 +488,60 @@ paths:
       - application/json
       responses:
         "200":
-          description: Application details
+          description: OK
           schema:
-            $ref: '#/definitions/db.Application'
+            $ref: '#/definitions/internal_application.Application'
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
         "404":
-          description: Application not found
+          description: Not Found
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get application by ID
       tags:
       - Admin - Applications
-  /admin/applications/{id}/users:
+    put:
+      consumes:
+      - application/json
+      description: Update an existing application's fields
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Application data
+        in: body
+        name: application
+        required: true
+        schema:
+          $ref: '#/definitions/internal_application.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Update an application
+      tags:
+      - Admin - Applications
+  /api/admin/applications/{id}/users:
     get:
       consumes:
       - application/json
@@ -372,27 +556,48 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of application users
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/db.User'
+              $ref: '#/definitions/go_auth_internal_user.User'
             type: array
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get application users
       tags:
-      - Admin - User-Application Relationships
-  /admin/permissions:
+      - Admin - User-Application-Role Relationships
+  /api/admin/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all permissions, optionally filtered by application_id
+      parameters:
+      - description: Filter by application ID
+        in: query
+        name: application_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_permission.Permission'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Get all permissions
+      tags:
+      - Admin - Permissions
     post:
       consumes:
       - application/json
@@ -403,31 +608,119 @@ paths:
         name: permission
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreatePermissionRequest'
+          $ref: '#/definitions/internal_permission.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Permission created successfully
+          description: Created
           schema:
-            $ref: '#/definitions/db.Permission'
+            $ref: '#/definitions/internal_permission.Permission'
         "400":
-          description: Bad request - validation error, application not found, or slug
-            already exists
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "409":
+          description: Conflict
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Create a new permission
       tags:
       - Admin - Permissions
-  /admin/roles:
+  /api/admin/permissions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a permission by ID
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Delete a permission
+      tags:
+      - Admin - Permissions
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific permission by its ID
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_permission.Permission'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Get permission by ID
+      tags:
+      - Admin - Permissions
+    put:
+      consumes:
+      - application/json
+      description: Update an existing permission's fields
+      parameters:
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Permission data
+        in: body
+        name: permission
+        required: true
+        schema:
+          $ref: '#/definitions/internal_permission.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Update a permission
+      tags:
+      - Admin - Permissions
+  /api/admin/roles:
     get:
       consumes:
       - application/json
@@ -441,16 +734,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of roles
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/db.Role'
+              $ref: '#/definitions/internal_role.Role'
             type: array
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
       security:
       - Bearer: []
       summary: Get all roles
@@ -466,35 +754,152 @@ paths:
         name: role
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreateRoleRequest'
+          $ref: '#/definitions/internal_role.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Role created successfully
+          description: Created
           schema:
-            $ref: '#/definitions/db.Role'
+            $ref: '#/definitions/internal_role.Role'
         "400":
-          description: Bad request - validation error, application not found, or slug
-            already exists
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "409":
+          description: Conflict
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Create a new role
       tags:
       - Admin - Roles
-  /admin/roles/{id}/permissions:
+  /api/admin/roles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a role by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Delete a role
+      tags:
+      - Admin - Roles
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific role by its ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_role.Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Get role by ID
+      tags:
+      - Admin - Roles
+    put:
+      consumes:
+      - application/json
+      description: Update an existing role's fields
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Role data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/internal_role.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Update a role
+      tags:
+      - Admin - Roles
+  /api/admin/roles/{id}/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all permissions assigned to a specific role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/go_auth_internal_permission.Permission'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: List role permissions
+      tags:
+      - Admin - Role-Permission Relationships
     post:
       consumes:
       - application/json
-      description: Assign a permission to a specific role
+      description: Assign a permission to a specific role (both must belong to the
+        same application)
       parameters:
       - description: Role ID
         in: path
@@ -506,31 +911,85 @@ paths:
         name: assignment
         required: true
         schema:
-          $ref: '#/definitions/handlers.AssignRolePermissionRequest'
+          $ref: '#/definitions/internal_role.AssignPermissionRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Permission assigned successfully
+          description: OK
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad request - invalid ID or permission not found
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "409":
+          description: Conflict
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Assign permission to role
       tags:
       - Admin - Role-Permission Relationships
-  /admin/users/{id}/application-roles:
+  /api/admin/roles/{id}/permissions/{permissionId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a permission from a specific role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Permission ID
+        in: path
+        name: permissionId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: Remove permission from role
+      tags:
+      - Admin - Role-Permission Relationships
+  /api/admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all users registered in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_user.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+      security:
+      - Bearer: []
+      summary: List all users
+      tags:
+      - Admin - Users
+  /api/admin/users/{id}/application-roles:
     get:
       consumes:
       - application/json
@@ -545,21 +1004,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of user application role assignments
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/db.UserApplicationRole'
+              $ref: '#/definitions/internal_access.UserApplicationRole'
             type: array
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get user application roles
@@ -575,41 +1028,34 @@ paths:
         name: id
         required: true
         type: integer
-      - description: User application role assignment data
+      - description: Assignment data
         in: body
         name: assignment
         required: true
         schema:
-          $ref: '#/definitions/handlers.AssignUserApplicationRoleRequest'
+          $ref: '#/definitions/internal_access.AssignRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Role assigned successfully
+          description: OK
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad request - invalid ID or role/application not found
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
         "409":
-          description: Conflict - user already has this role in this application
+          description: Conflict
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Assign role to user in application
       tags:
       - Admin - User-Application-Role Relationships
-  /admin/users/{id}/application-roles/{applicationId}/{roleId}:
+  /api/admin/users/{id}/application-roles/{applicationId}/{roleId}:
     delete:
       consumes:
       - application/json
@@ -634,26 +1080,20 @@ paths:
       - application/json
       responses:
         "200":
-          description: Role removed successfully
+          description: OK
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Remove role from user in application
       tags:
       - Admin - User-Application-Role Relationships
-  /admin/users/{id}/applications:
+  /api/admin/users/{id}/applications:
     get:
       consumes:
       - application/json
@@ -668,70 +1108,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of user applications
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/db.Application'
+              $ref: '#/definitions/go_auth_internal_application.Application'
             type: array
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get user applications
       tags:
-      - Admin - User-Application Relationships
-    post:
-      consumes:
-      - application/json
-      description: Assign an application to a specific user
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Application assignment data
-        in: body
-        name: assignment
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.AssignUserApplicationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Application assigned successfully
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad request - invalid ID or application not found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - Bearer: []
-      summary: Assign application to user
-      tags:
-      - Admin - User-Application Relationships
-  /admin/users/{id}/applications/{applicationId}:
+      - Admin - User-Application-Role Relationships
+  /api/admin/users/{id}/applications/{applicationId}:
     delete:
       consumes:
       - application/json
-      description: Remove an application assignment from a specific user
+      description: Revoke every role assignment a user holds within an application
       parameters:
       - description: User ID
         in: path
@@ -747,26 +1142,20 @@ paths:
       - application/json
       responses:
         "200":
-          description: Application removed successfully
+          description: OK
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad request - invalid ID
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
-      summary: Remove application from user
+      summary: Remove all roles from a user in an application
       tags:
-      - Admin - User-Application Relationships
-  /health:
+      - Admin - User-Application-Role Relationships
+  /api/health:
     get:
       consumes:
       - application/json
@@ -775,19 +1164,19 @@ paths:
       - application/json
       responses:
         "200":
-          description: API is healthy
+          description: OK
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: API is unhealthy
+          description: Internal Server Error
           schema:
             additionalProperties: true
             type: object
       summary: Health check
       tags:
       - Health
-  /login:
+  /api/login:
     post:
       consumes:
       - application/json
@@ -799,33 +1188,26 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/handlers.LoginRequest'
+          $ref: '#/definitions/internal_access.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Login successful
+          description: OK
           schema:
-            $ref: '#/definitions/handlers.LoginResponse'
+            $ref: '#/definitions/internal_access.LoginResponse'
         "400":
-          description: Bad request - validation error
+          description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
         "401":
-          description: Unauthorized - invalid credentials
+          description: Unauthorized
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       summary: User login
       tags:
       - Authentication
-  /me:
+  /api/me:
     get:
       consumes:
       - application/json
@@ -835,30 +1217,23 @@ paths:
       - application/json
       responses:
         "200":
-          description: Current user information
+          description: OK
           schema:
-            $ref: '#/definitions/handlers.UserInfo'
+            $ref: '#/definitions/internal_access.UserInfo'
         "401":
-          description: Unauthorized - invalid or missing token
+          description: Unauthorized
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
         "404":
-          description: User not found
+          description: Not Found
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       security:
       - Bearer: []
       summary: Get current user
       tags:
       - Authentication
-  /register:
+  /api/register:
     post:
       consumes:
       - application/json
@@ -869,7 +1244,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.RegisterRequest'
+          $ref: '#/definitions/internal_user.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -879,18 +1254,20 @@ paths:
             additionalProperties: true
             type: object
         "400":
-          description: Bad request - validation error or user already exists
+          description: Bad request - validation error
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
+        "409":
+          description: Email or username already taken
+          schema:
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
         "500":
           description: Internal server error
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/go_auth_internal_apierror.Body'
       summary: Register a new user
       tags:
-      - Authentication
+      - Users
 securityDefinitions:
   Bearer:
     description: Digite "Bearer " seguido do token JWT

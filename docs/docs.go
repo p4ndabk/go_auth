@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/application-roles/users/{userId}/applications/{applicationId}/roles": {
+        "/api/admin/application-roles/users/{userId}/applications/{applicationId}/roles": {
             "get": {
                 "security": [
                     {
@@ -60,32 +60,24 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of user roles in application",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.Role"
+                                "$ref": "#/definitions/go_auth_internal_role.Role"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/applications": {
+        "/api/admin/applications": {
             "get": {
                 "security": [
                     {
@@ -105,19 +97,18 @@ const docTemplate = `{
                 "summary": "Get all applications",
                 "responses": {
                     "200": {
-                        "description": "List of applications",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.Application"
+                                "$ref": "#/definitions/internal_application.Application"
                             }
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
@@ -146,35 +137,39 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateApplicationRequest"
+                            "$ref": "#/definitions/internal_application.CreateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Application created successfully",
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/db.Application"
+                            "$ref": "#/definitions/internal_application.Application"
                         }
                     },
                     "400": {
-                        "description": "Bad request - validation error or slug already exists",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/applications/{id}": {
+        "/api/admin/applications/{id}": {
             "get": {
                 "security": [
                     {
@@ -203,36 +198,132 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Application details",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.Application"
+                            "$ref": "#/definitions/internal_application.Application"
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
                     "404": {
-                        "description": "Application not found",
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update an existing application's fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Applications"
+                ],
+                "summary": "Update an application",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Application data",
+                        "name": "application",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_application.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete an application by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Applications"
+                ],
+                "summary": "Delete an application",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/applications/{id}/users": {
+        "/api/admin/applications/{id}/users": {
             "get": {
                 "security": [
                     {
@@ -247,7 +338,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin - User-Application Relationships"
+                    "Admin - User-Application-Role Relationships"
                 ],
                 "summary": "Get application users",
                 "parameters": [
@@ -261,32 +352,67 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of application users",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.User"
+                                "$ref": "#/definitions/go_auth_internal_user.User"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/permissions": {
+        "/api/admin/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve a list of all permissions, optionally filtered by application_id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Permissions"
+                ],
+                "summary": "Get all permissions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by application ID",
+                        "name": "application_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_permission.Permission"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -311,35 +437,175 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreatePermissionRequest"
+                            "$ref": "#/definitions/internal_permission.CreateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Permission created successfully",
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/db.Permission"
+                            "$ref": "#/definitions/internal_permission.Permission"
                         }
                     },
                     "400": {
-                        "description": "Bad request - validation error, application not found, or slug already exists",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
-                    "500": {
-                        "description": "Internal server error",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/roles": {
+        "/api/admin/permissions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve a specific permission by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Permissions"
+                ],
+                "summary": "Get permission by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Permission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_permission.Permission"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update an existing permission's fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Permissions"
+                ],
+                "summary": "Update a permission",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Permission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Permission data",
+                        "name": "permission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_permission.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete a permission by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Permissions"
+                ],
+                "summary": "Delete a permission",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Permission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/roles": {
             "get": {
                 "security": [
                     {
@@ -367,19 +633,12 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of roles",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.Role"
+                                "$ref": "#/definitions/internal_role.Role"
                             }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     }
                 }
@@ -408,42 +667,226 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateRoleRequest"
+                            "$ref": "#/definitions/internal_role.CreateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Role created successfully",
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/db.Role"
+                            "$ref": "#/definitions/internal_role.Role"
                         }
                     },
                     "400": {
-                        "description": "Bad request - validation error, application not found, or slug already exists",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
-                    "500": {
-                        "description": "Internal server error",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/roles/{id}/permissions": {
+        "/api/admin/roles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve a specific role by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Roles"
+                ],
+                "summary": "Get role by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_role.Role"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update an existing role's fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Roles"
+                ],
+                "summary": "Update a role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Role data",
+                        "name": "role",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_role.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete a role by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Roles"
+                ],
+                "summary": "Delete a role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/roles/{id}/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve all permissions assigned to a specific role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Role-Permission Relationships"
+                ],
+                "summary": "List role permissions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/go_auth_internal_permission.Permission"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Assign a permission to a specific role",
+                "description": "Assign a permission to a specific role (both must belong to the same application)",
                 "consumes": [
                     "application/json"
                 ],
@@ -468,36 +911,122 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AssignRolePermissionRequest"
+                            "$ref": "#/definitions/internal_role.AssignPermissionRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Permission assigned successfully",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID or permission not found",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
-                    "500": {
-                        "description": "Internal server error",
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/users/{id}/application-roles": {
+        "/api/admin/roles/{id}/permissions/{permissionId}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Remove a permission from a specific role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Role-Permission Relationships"
+                ],
+                "summary": "Remove permission from role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Permission ID",
+                        "name": "permissionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve a list of all users registered in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "List all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_user.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/users/{id}/application-roles": {
             "get": {
                 "security": [
                     {
@@ -526,26 +1055,18 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of user application role assignments",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.UserApplicationRole"
+                                "$ref": "#/definitions/internal_access.UserApplicationRole"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
@@ -576,48 +1097,39 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "User application role assignment data",
+                        "description": "Assignment data",
                         "name": "assignment",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AssignUserApplicationRoleRequest"
+                            "$ref": "#/definitions/internal_access.AssignRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Role assigned successfully",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID or role/application not found",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
                     "409": {
-                        "description": "Conflict - user already has this role in this application",
+                        "description": "Conflict",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/users/{id}/application-roles/{applicationId}/{roleId}": {
+        "/api/admin/users/{id}/application-roles/{applicationId}/{roleId}": {
             "delete": {
                 "security": [
                     {
@@ -660,30 +1172,22 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Role removed successfully",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/users/{id}/applications": {
+        "/api/admin/users/{id}/applications": {
             "get": {
                 "security": [
                     {
@@ -698,7 +1202,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin - User-Application Relationships"
+                    "Admin - User-Application-Role Relationships"
                 ],
                 "summary": "Get user applications",
                 "parameters": [
@@ -712,98 +1216,31 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of user applications",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.Application"
+                                "$ref": "#/definitions/go_auth_internal_application.Application"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Assign an application to a specific user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin - User-Application Relationships"
-                ],
-                "summary": "Assign application to user",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Application assignment data",
-                        "name": "assignment",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.AssignUserApplicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Application assigned successfully",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - invalid ID or application not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/admin/users/{id}/applications/{applicationId}": {
+        "/api/admin/users/{id}/applications/{applicationId}": {
             "delete": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Remove an application assignment from a specific user",
+                "description": "Revoke every role assignment a user holds within an application",
                 "consumes": [
                     "application/json"
                 ],
@@ -811,9 +1248,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin - User-Application Relationships"
+                    "Admin - User-Application-Role Relationships"
                 ],
-                "summary": "Remove application from user",
+                "summary": "Remove all roles from a user in an application",
                 "parameters": [
                     {
                         "type": "integer",
@@ -832,30 +1269,22 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Application removed successfully",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request - invalid ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/health": {
+        "/api/health": {
             "get": {
                 "description": "Returns the health status of the API and database connection",
                 "consumes": [
@@ -870,14 +1299,14 @@ const docTemplate = `{
                 "summary": "Health check",
                 "responses": {
                     "200": {
-                        "description": "API is healthy",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "API is unhealthy",
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -886,7 +1315,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/login": {
+        "/api/login": {
             "post": {
                 "description": "Authenticate user with email and password, returns JWT token with user info",
                 "consumes": [
@@ -906,42 +1335,33 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.LoginRequest"
+                            "$ref": "#/definitions/internal_access.LoginRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Login successful",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.LoginResponse"
+                            "$ref": "#/definitions/internal_access.LoginResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad request - validation error",
+                        "description": "Bad Request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - invalid credentials",
+                        "description": "Unauthorized",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/me": {
+        "/api/me": {
             "get": {
                 "security": [
                     {
@@ -961,36 +1381,27 @@ const docTemplate = `{
                 "summary": "Get current user",
                 "responses": {
                     "200": {
-                        "description": "Current user information",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserInfo"
+                            "$ref": "#/definitions/internal_access.UserInfo"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - invalid or missing token",
+                        "description": "Unauthorized",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "Not Found",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
             }
         },
-        "/register": {
+        "/api/register": {
             "post": {
                 "description": "Create a new user account with username, email and password",
                 "consumes": [
@@ -1000,7 +1411,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Authentication"
+                    "Users"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -1010,7 +1421,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.RegisterRequest"
+                            "$ref": "#/definitions/internal_user.RegisterRequest"
                         }
                     }
                 ],
@@ -1023,17 +1434,21 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad request - validation error or user already exists",
+                        "description": "Bad request - validation error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
+                        }
+                    },
+                    "409": {
+                        "description": "Email or username already taken",
+                        "schema": {
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/go_auth_internal_apierror.Body"
                         }
                     }
                 }
@@ -1041,7 +1456,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "db.Application": {
+        "go_auth_internal_apierror.Body": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/go_auth_internal_apierror.Detail"
+                }
+            }
+        },
+        "go_auth_internal_apierror.Detail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "go_auth_internal_application.Application": {
             "type": "object",
             "properties": {
                 "active": {
@@ -1064,7 +1498,7 @@ const docTemplate = `{
                 }
             }
         },
-        "db.Permission": {
+        "go_auth_internal_permission.Permission": {
             "type": "object",
             "properties": {
                 "active": {
@@ -1087,7 +1521,7 @@ const docTemplate = `{
                 }
             }
         },
-        "db.Role": {
+        "go_auth_internal_role.Role": {
             "type": "object",
             "properties": {
                 "active": {
@@ -1113,7 +1547,7 @@ const docTemplate = `{
                 }
             }
         },
-        "db.User": {
+        "go_auth_internal_user.User": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -1133,7 +1567,71 @@ const docTemplate = `{
                 }
             }
         },
-        "db.UserApplicationRole": {
+        "internal_access.AssignRequest": {
+            "type": "object",
+            "required": [
+                "application_id",
+                "role_id"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "integer"
+                },
+                "profile_id": {
+                    "type": "integer"
+                },
+                "role_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_access.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_access.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_access.UserInfo"
+                }
+            }
+        },
+        "internal_access.UserApplicationAccess": {
+            "type": "object",
+            "properties": {
+                "application": {
+                    "$ref": "#/definitions/go_auth_internal_application.Application"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_access.UserApplicationRole": {
             "type": "object",
             "properties": {
                 "application_id": {
@@ -1156,7 +1654,174 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AssignRolePermissionRequest": {
+        "internal_access.UserInfo": {
+            "type": "object",
+            "properties": {
+                "applications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_access.UserApplicationAccess"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_application.Application": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_application.CreateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "slug"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                }
+            }
+        },
+        "internal_application.UpdateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "slug"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                }
+            }
+        },
+        "internal_permission.CreateRequest": {
+            "type": "object",
+            "required": [
+                "application_id",
+                "name",
+                "slug"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                }
+            }
+        },
+        "internal_permission.Permission": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "application_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_permission.UpdateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "slug"
+            ],
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "slug": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                }
+            }
+        },
+        "internal_role.AssignPermissionRequest": {
             "type": "object",
             "required": [
                 "permission_id"
@@ -1167,58 +1832,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AssignUserApplicationRequest": {
-            "type": "object",
-            "required": [
-                "application_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.AssignUserApplicationRoleRequest": {
-            "type": "object",
-            "required": [
-                "application_id",
-                "role_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "integer"
-                },
-                "profile_id": {
-                    "type": "integer"
-                },
-                "role_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.CreateApplicationRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "slug"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "slug": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 2
-                }
-            }
-        },
-        "handlers.CreatePermissionRequest": {
+        "internal_role.CreateRequest": {
             "type": "object",
             "required": [
                 "application_id",
@@ -1244,16 +1858,41 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.CreateRoleRequest": {
+        "internal_role.Role": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "application_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_role.UpdateRequest": {
             "type": "object",
             "required": [
-                "application_id",
                 "name",
                 "slug"
             ],
             "properties": {
-                "application_id": {
-                    "type": "integer"
+                "active": {
+                    "type": "boolean"
                 },
                 "description": {
                     "type": "string"
@@ -1270,33 +1909,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.LoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/handlers.UserInfo"
-                }
-            }
-        },
-        "handlers.RegisterRequest": {
+        "internal_user.RegisterRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -1318,26 +1931,17 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UserInfo": {
+        "internal_user.User": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "username": {
                     "type": "string"
@@ -1361,7 +1965,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:9001",
+	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Go Auth API",

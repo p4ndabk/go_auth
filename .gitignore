@@ -46,8 +46,14 @@ Thumbs.db
 
 # Build output
 build/
+bin/
 dist/
 /storage
+/go_auth
+/api
+/migrate
+/seed
+/data
 
 # Temporary files
 *.tmp

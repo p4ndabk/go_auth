@@ -1,40 +1,57 @@
+// Package auth is a cross-cutting concern (JWT + password hashing), same
+// infra exception as apierror/health/docs: no model/service, no dependency
+// on any domain package. ApplicationAccess/ApplicationInfo are auth's own
+// DTOs for what goes inside the token — deliberately decoupled from the
+// access/application domain types so this package stays a leaf.
 package auth
 
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
-
-	db "go_auth/internal/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+
+	"go_auth/internal/apierror"
 )
+
+type ApplicationInfo struct {
+	ID          uint   `json:"id"`
+	UUID        string `json:"uuid"`
+	Slug        string `json:"slug"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Active      bool   `json:"active"`
+}
+
+type ApplicationAccess struct {
+	Application ApplicationInfo `json:"application"`
+	Roles       []string        `json:"roles"`
+	Permissions []string        `json:"permissions"`
+}
+
+type Claims struct {
+	UserID       uint                `json:"user_id"`
+	Email        string              `json:"email"`
+	Applications []ApplicationAccess `json:"applications"`
+	jwt.RegisteredClaims
+}
+
+type UserClaims struct {
+	UserID       uint
+	Email        string
+	Applications []ApplicationAccess
+}
 
 type Service struct {
 	jwtSecret []byte
 }
 
-type Claims struct {
-	UserID       int                        `json:"user_id"`
-	Email        string                     `json:"email"`
-	Applications []db.UserApplicationAccess `json:"applications"`
-	jwt.RegisteredClaims
-}
-
-type UserClaims struct {
-	UserID       int
-	Email        string
-	Applications []db.UserApplicationAccess
-}
-
 func New(jwtSecret string) *Service {
-	return &Service{
-		jwtSecret: []byte(jwtSecret),
-	}
+	return &Service{jwtSecret: []byte(jwtSecret)}
 }
 
 func (s *Service) HashPassword(password string) (string, error) {
@@ -43,11 +60,10 @@ func (s *Service) HashPassword(password string) (string, error) {
 }
 
 func (s *Service) CheckPassword(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
-func (s *Service) GenerateToken(userID int, email string, applications []db.UserApplicationAccess) (string, error) {
+func (s *Service) GenerateToken(userID uint, email string, applications []ApplicationAccess) (string, error) {
 	claims := &Claims{
 		UserID:       userID,
 		Email:        email,
@@ -71,7 +87,6 @@ func (s *Service) ValidateToken(tokenString string) (*UserClaims, error) {
 		}
 		return s.jwtSecret, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -91,21 +106,21 @@ func (s *Service) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			apierror.Respond(c, apierror.Unauthorized("missing_authorization", "authorization header required"))
 			c.Abort()
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == authHeader {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
+			apierror.Respond(c, apierror.Unauthorized("missing_bearer_token", "bearer token required"))
 			c.Abort()
 			return
 		}
 
 		claims, err := s.ValidateToken(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			apierror.Respond(c, apierror.Unauthorized("invalid_token", "invalid token"))
 			c.Abort()
 			return
 		}

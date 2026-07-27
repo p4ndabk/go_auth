@@ -10,7 +10,7 @@
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:9001
+// @host localhost:8080
 // @BasePath /
 
 // @securityDefinitions.apikey Bearer
@@ -21,73 +21,95 @@
 package main
 
 import (
-	"database/sql"
 	"log"
-	"net/http"
+	"strings"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	_ "go_auth/docs"
+	"go_auth/internal/access"
+	"go_auth/internal/application"
 	"go_auth/internal/auth"
 	"go_auth/internal/config"
-	db "go_auth/internal/database"
-	"go_auth/internal/handlers"
-	"go_auth/internal/routes"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
+	"go_auth/internal/database"
+	"go_auth/internal/docs"
+	"go_auth/internal/health"
+	"go_auth/internal/permission"
+	"go_auth/internal/role"
+	"go_auth/internal/user"
 )
 
 func main() {
-	// Load .env file if it exists
 	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found: %v", err)
+		log.Printf("warning: .env file not found: %v", err)
 	}
 
-	// Load configuration
 	cfg := config.Load()
 
-	// Initialize database
-	var database *sql.DB
-	var err error
-
-	switch cfg.DatabaseType {
-	case "mysql":
-		database, err = sql.Open("mysql", cfg.DatabaseURL)
-	case "sqlite":
-		fallthrough
-	default:
-		database, err = sql.Open("sqlite3", cfg.DatabaseURL)
-	}
-
+	db, err := database.Connect(cfg.DBDriver, cfg.DBPath, cfg.DBDSN)
 	if err != nil {
-		log.Fatalf("Failed to connect to %s database: %v", cfg.DatabaseType, err)
+		log.Fatalf("failed to connect to %s database: %v", cfg.DBDriver, err)
 	}
-	defer database.Close()
+	log.Printf("connected to %s database successfully", cfg.DBDriver)
 
-	// Test database connection
-	if err := database.Ping(); err != nil {
-		log.Fatalf("Failed to ping %s database: %v", cfg.DatabaseType, err)
-	}
-
-	log.Printf("Connected to %s database successfully", cfg.DatabaseType)
-
-	// Initialize database schema
-	if err := db.InitSchema(database, cfg.DatabaseType); err != nil {
-		log.Fatal("Failed to initialize database schema:", err)
-	}
-
-	// Initialize services
-	dbService := db.New(database)
+	userService := user.NewService(db)
+	applicationService := application.NewService(db)
+	roleService := role.NewService(db)
+	permissionService := permission.NewService(db)
+	accessService := access.NewService(db)
 	authService := auth.New(cfg.JWTSecret)
 
-	// Initialize handlers
-	h := handlers.New(dbService, authService)
-	adminH := handlers.NewAdminHandler(dbService)
+	userHandler := user.NewHandler(userService, authService)
+	applicationHandler := application.NewHandler(applicationService)
+	roleHandler := role.NewHandler(roleService, applicationService)
+	permissionHandler := permission.NewHandler(permissionService, applicationService)
+	accessHandler := access.NewHandler(accessService, userService, applicationService, roleService, authService)
+	healthHandler := health.NewHandler(db)
 
-	// Setup routes
-	router := routes.SetupRoutes(h, adminH, authService)
+	router := gin.Default()
+	router.Use(corsConfig(cfg.CORSAllowedOrigins))
 
-	// Start server
-	log.Printf("Server starting on port %s", cfg.Port)
-	log.Fatal(http.ListenAndServe(":"+cfg.Port, router))
+	api := router.Group("/api")
+
+	health.RegisterRoutes(api, healthHandler)
+	docs.RegisterRoutes(api)
+
+	user.RegisterPublicRoutes(api, userHandler)
+	access.RegisterPublicRoutes(api, accessHandler)
+
+	protected := api.Group("/")
+	protected.Use(authService.AuthMiddleware())
+	access.RegisterProtectedRoutes(protected, accessHandler)
+
+	admin := api.Group("/admin")
+	admin.Use(authService.AuthMiddleware())
+	user.RegisterAdminRoutes(admin, userHandler)
+	application.RegisterRoutes(admin, applicationHandler)
+	role.RegisterRoutes(admin, roleHandler)
+	permission.RegisterRoutes(admin, permissionHandler)
+	access.RegisterAdminRoutes(admin, accessHandler)
+
+	log.Printf("server starting on port %s", cfg.Port)
+	log.Fatal(router.Run(":" + cfg.Port))
+}
+
+// corsConfig wires gin-contrib/cors from CORS_ALLOWED_ORIGINS ("*" or a
+// comma-separated allowlist). Authorization is explicitly allowed since the
+// API is JWT bearer-token based.
+func corsConfig(allowedOrigins string) gin.HandlerFunc {
+	cfg := cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"},
+		AllowCredentials: true,
+	}
+
+	if allowedOrigins == "*" {
+		cfg.AllowAllOrigins = true
+	} else {
+		cfg.AllowOrigins = strings.Split(allowedOrigins, ",")
+	}
+
+	return cors.New(cfg)
 }

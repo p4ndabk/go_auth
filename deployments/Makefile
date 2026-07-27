@@ -1,80 +1,57 @@
-# Go parameters
+# Run from the repo root: make -f deployments/Makefile <target>
 GOCMD=go
-GOBUILD=$(GOCMD) build
-GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
-GOMOD=$(GOCMD) mod
 BINARY_NAME=go_auth
-BINARY_UNIX=$(BINARY_NAME)_unix
 
-# Build the application
+.PHONY: build run migrate rollback seed test test-coverage vet swagger clean docker-build help
+
 build:
-	$(GOBUILD) -o $(BINARY_NAME) -v .
+	$(GOCMD) build -o bin/api ./cmd/api
+	$(GOCMD) build -o bin/migrate ./cmd/migrate
+	$(GOCMD) build -o bin/seed ./cmd/seed
 
-# Install dependencies
-deps:
-	$(GOMOD) download
-	$(GOMOD) tidy
-
-# Run the application
 run:
-	$(GOCMD) run main.go
+	$(GOCMD) run ./cmd/api
 
-# Clean build files
-clean:
-	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_UNIX)
+migrate:
+	$(GOCMD) run ./cmd/migrate
 
-# Run tests
+rollback:
+	$(GOCMD) run ./cmd/migrate -rollback
+
+seed:
+	$(GOCMD) run ./cmd/seed
+
 test:
-	$(GOTEST) -v ./...
+	$(GOCMD) test -v ./...
 
-# Test coverage
 test-coverage:
-	$(GOTEST) -v -coverprofile=coverage.out ./...
+	$(GOCMD) test -v -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out
 
-# Reset database
-reset-db:
-	rm -f auth.db
-	@echo "Database reset. Run 'make run' to recreate it."
+vet:
+	$(GOCMD) vet ./...
 
-# Seed database with sample data
-seed:
-	./scripts/seed_db.sh
+swagger:
+	$(GOCMD) tool swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
 
-# Test API endpoints
-test-api:
-	./scripts/test_api.sh
+clean:
+	rm -rf bin coverage.out
 
-# Test Admin API endpoints
-test-admin:
-	./scripts/test_admin_api.sh
-
-# Build for Linux
-build-linux:
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_UNIX) -v .
-
-# Docker build
 docker-build:
-	docker build -t $(BINARY_NAME) .
+	docker build -f deployments/Dockerfile -t $(BINARY_NAME) .
 
-# Show help
 help:
 	@echo ""
-	@echo "Usage:"
-	@echo "  make build        Build the application"
-	@echo "  make run          Run the application"
-	@echo "  make test         Run tests"
-	@echo "  make test-api     Test API endpoints"
-	@echo "  make test-admin   Test admin API endpoints"
-	@echo "  make clean        Clean build files"
-	@echo "  make deps         Install dependencies"
-	@echo "  make reset-db     Reset database"
-	@echo "  make seed         Seed database with sample data"
-	@echo "  make help         Show this help message"
+	@echo "Usage (from repo root): make -f deployments/Makefile <target>"
+	@echo "  build          Build api/migrate/seed binaries into ./bin"
+	@echo "  run            Run the API server"
+	@echo "  migrate        Apply pending migrations"
+	@echo "  rollback       Roll back the last migration"
+	@echo "  seed           Seed the database with sample data"
+	@echo "  test           Run tests"
+	@echo "  test-coverage  Run tests with an HTML coverage report"
+	@echo "  vet            Run go vet"
+	@echo "  swagger        Regenerate the Swagger docs"
+	@echo "  clean          Remove build artifacts"
+	@echo "  docker-build   Build the Docker image"
 	@echo ""
-
-.PHONY: build clean test test-coverage deps run reset-db seed test-api test-admin build-linux docker-build help
